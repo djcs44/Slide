@@ -594,7 +594,7 @@
     <string name="settings_set_image_location">Images will be saved to %s</string>
     <string name="settings_general_immersive_mode">Immersive fullscreen mode</string>
     <string name="settings_general_immersive_mode_desc">Hide the status and navigation bars (experimental)</string>
-    <string name="settings_general_tap_vote">Double/Triple tap to upvote/downvote</string>
+    <string name="settings_general_tap_vote">Double/triple tap to upvote/downvote</string>
     <string name="settings_general_tap_vote_desc">Will add a slight delay to opening a post</string>
     <string name="settings_comments_tap_vote_desc">Will add a slight delay to tapping a post</string>
 

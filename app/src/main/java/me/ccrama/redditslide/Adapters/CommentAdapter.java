@@ -413,10 +413,8 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                 else mNumTaps = 1;
                                 mLastTapTimeMs = mTimeAtPress;
                                 if (mNumTaps == 3) {
-                                    Toast.makeText(holder.itemView.getContext(), "triple tap!", Toast.LENGTH_SHORT).show();
                                     // Valid triple tap
                                     performCommentDownvote(holder, comment, baseNode, comment, v, upvoteButton, downvoteButton);
-//                                    downvoteButton.performClick();
                                 }
                                 else if (mNumTaps == 2) {
                                     // Wait in case of a third tap
@@ -425,9 +423,6 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                         public void run() {
                                             if (mNumTaps == 2) {
                                                 performCommentUpvote(holder, comment, baseNode, comment, v, upvoteButton, downvoteButton);
-                                                Toast.makeText(holder.itemView.getContext(), "double tap!", Toast.LENGTH_SHORT).show();
-                                                // No further taps, it's a double tap
-//                                                upvoteButton.performClick();
                                             }
                                         }
                                     }, ViewConfiguration.getDoubleTapTimeout());
