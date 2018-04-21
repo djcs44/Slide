@@ -119,6 +119,8 @@ public class SettingValues {
     public static final String PREF_HIGHLIGHT_COMMENT_OP   = "commentOP";
     public static final String PREF_LONG_LINK              = "shareLongLink";
 
+    public static final String PREF_TAP_VOTE               = "tapVote";
+
     public static CreateCardView.CardEnum defaultCardView;
     public static Sorting                 defaultSorting;
     public static TimePeriod              timePeriod;
@@ -237,6 +239,7 @@ public class SettingValues {
     public static boolean largeLinks;
     public static boolean highlightCommentOP;
     public static boolean highlightTime;
+    public static boolean tapVote;
 
     public static void setAllValues(SharedPreferences settings) {
         prefs = settings;
@@ -384,6 +387,9 @@ public class SettingValues {
         actionbarTap = prefs.getBoolean(PREF_ACTIONBAR_TAP, false);
         colorIcon = prefs.getBoolean(PREF_COLOR_ICON, false);
         peek = prefs.getBoolean(PREF_PEEK, false);
+
+        // defaulting to false as of now - dj 20180421
+        tapVote = prefs.getBoolean(PREF_TAP_VOTE, false);
     }
 
     public static void setPicsEnabled(String sub, boolean checked) {

@@ -570,6 +570,24 @@ public class SettingsGeneral extends BaseActivityAnim
                 }
             });
         }
+
+        final SwitchCompat switchTapVote = (SwitchCompat) findViewById(R.id.tapVote);
+        switchTapVote.setEnabled(Authentication.isLoggedIn);
+        if(Authentication.isLoggedIn) {
+            switchTapVote.setChecked(SettingValues.tapVote);
+            switchTapVote.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    SettingValues.tapVote = isChecked;
+                    SettingValues.prefs.edit().putBoolean(SettingValues.PREF_TAP_VOTE, isChecked).apply();
+                }
+            });
+        }
+        else {
+            switchTapVote.setChecked(false);
+            SettingValues.tapVote = false;
+            SettingValues.prefs.edit().putBoolean(SettingValues.PREF_TAP_VOTE, false).apply();
+        }
     }
 
     public void doNotifText(){
