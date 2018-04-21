@@ -135,57 +135,55 @@ public class PopulateSubmissionViewHolder {
             final Activity contextActivity, final Submission submission,
             final SubmissionViewHolder holder, final boolean full, final View tapBase, final ImageView upvoteButton, final ImageView downvoteButton) {
 
-        tapBase.setOnTouchListener(new View.OnTouchListener() {
-            Handler mHandler = new Handler();
-            int mNumTaps = 0;
-            long mLastTapTimeMs = 0, mTouchDownMs = 0, mTimeAtPress;
+        if(SettingValues.tapVote) {
+            tapBase.setOnTouchListener(new View.OnTouchListener() {
+                Handler mHandler = new Handler();
+                int mNumTaps = 0;
+                long mLastTapTimeMs = 0, mTouchDownMs = 0, mTimeAtPress;
 
-            @Override
-            public boolean onTouch(final View v, MotionEvent event) {
-                // Cache time so there's no variation between currentTimeMillis() calls
-                mTimeAtPress = System.currentTimeMillis();
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        mTouchDownMs = mTimeAtPress;
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        mHandler.removeCallbacksAndMessages(null);
-                        if((mTimeAtPress - mTouchDownMs) > ViewConfiguration.getTapTimeout()) {
-                            mNumTaps = 0;
-                            mLastTapTimeMs = 0;
+                @Override
+                public boolean onTouch(final View v, MotionEvent event) {
+                    // Cache time so there's no variation between currentTimeMillis() calls
+                    mTimeAtPress = System.currentTimeMillis();
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            mTouchDownMs = mTimeAtPress;
                             break;
-                        }
-                        if(mNumTaps > 0 && (mTimeAtPress - mLastTapTimeMs) < ViewConfiguration.getDoubleTapTimeout())
-                            mNumTaps ++;
-                        else
-                            mNumTaps = 1;
-                        mLastTapTimeMs = mTimeAtPress;
-                        if(mNumTaps == 3) {
-                            downvoteButton.performClick();
-                        }
-                        else if(mNumTaps == 2) {
-                            mHandler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (mNumTaps == 2) {
-                                        upvoteButton.performClick();
+                        case MotionEvent.ACTION_UP:
+                            mHandler.removeCallbacksAndMessages(null);
+                            if ((mTimeAtPress - mTouchDownMs) > ViewConfiguration.getTapTimeout()) {
+                                mNumTaps = 0;
+                                mLastTapTimeMs = 0;
+                                break;
+                            }
+                            if (mNumTaps > 0 && (mTimeAtPress - mLastTapTimeMs) < ViewConfiguration.getDoubleTapTimeout())
+                                mNumTaps++;
+                            else mNumTaps = 1;
+                            mLastTapTimeMs = mTimeAtPress;
+                            if (mNumTaps == 3) {
+                                downvoteButton.performClick();
+                            } else if (mNumTaps == 2) {
+                                mHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (mNumTaps == 2) {
+                                            upvoteButton.performClick();
+                                        }
                                     }
-                                }
-                            }, ViewConfiguration.getDoubleTapTimeout());
-                        }
-                        else
-                            mHandler.postDelayed(new Runnable() {
+                                }, ViewConfiguration.getDoubleTapTimeout());
+                            } else mHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    if(mNumTaps == 1) {
+                                    if (mNumTaps == 1) {
                                         v.performClick();
                                     }
                                 }
                             }, ViewConfiguration.getDoubleTapTimeout());
+                    }
+                    return true;
                 }
-                return true;
-            }
-        });
+            });
+        }
         base.setOnClickListener(new OnSingleClickListener() {
             @Override
             public void onSingleClick(View v) {
