@@ -400,6 +400,13 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         switch (event.getAction()) {
                             case MotionEvent.ACTION_DOWN:
                                 mTouchDownMs = mTimeAtPress;
+                                mHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if(mNumTaps == 0)
+                                            v.performLongClick();
+                                    }
+                                }, ViewConfiguration.getLongPressTimeout());
                                 break;
                             case MotionEvent.ACTION_UP:
                                 mHandler.removeCallbacksAndMessages(null);
