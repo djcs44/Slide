@@ -385,6 +385,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 }
             });
             if(SettingValues.tapVoteComment) {
+                // Tapping on in-text content doesn't work
                 final ImageView upvoteButton = holder.itemView.findViewById(R.id.upvote);
                 final ImageView downvoteButton = holder.itemView.findViewById(R.id.downvote);
                 holder.firstTextView.setOnTouchListener(new View.OnTouchListener() {
@@ -395,11 +396,16 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
                     @Override
                     public boolean onTouch(final View v, MotionEvent event) {
+                        boolean mHasCallback = false;
                         // Cache time so there's no variation between currentTimeMillis() calls
                         mTimeAtPress = System.currentTimeMillis();
                         switch (event.getAction()) {
+//                            case MotionEvent.ACTION_MOVE:
+//                                mHandler.removeCallbacksAndMessages(null);
+//                                break;
                             case MotionEvent.ACTION_DOWN:
                                 mTouchDownMs = mTimeAtPress;
+                                mHasCallback = true;
                                 mHandler.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
@@ -409,6 +415,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                 }, ViewConfiguration.getLongPressTimeout());
                                 break;
                             case MotionEvent.ACTION_UP:
+                                mHasCallback = false;
                                 mHandler.removeCallbacksAndMessages(null);
                                 if ((mTimeAtPress - mTouchDownMs) > ViewConfiguration.getTapTimeout()) {
                                     mNumTaps = 0;
@@ -424,6 +431,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                     performCommentDownvote(holder, comment, baseNode, comment, v, upvoteButton, downvoteButton);
                                 }
                                 else if (mNumTaps == 2) {
+                                    mHasCallback = true;
                                     // Wait in case of a third tap
                                     mHandler.postDelayed(new Runnable() {
                                         @Override
@@ -435,6 +443,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                     }, ViewConfiguration.getDoubleTapTimeout());
                                 }
                                 else {
+                                    mHasCallback = true;
                                     // Wait in case of a second tap
                                     mHandler.postDelayed(new Runnable() {
                                         @Override
@@ -447,7 +456,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                     }, ViewConfiguration.getDoubleTapTimeout());
                                 }
                         }
-                        return true;
+                        return mHasCallback;
                     }
                 });
             }
