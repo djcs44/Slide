@@ -378,6 +378,11 @@ public class SpoilerRobotoTextView extends RobotoTextView implements ClickableTe
     }
 
     @Override
+    public boolean performClick() {
+        return super.performClick();
+    }
+
+    @Override
     public void onLinkClick(String url, int xOffset, String subreddit, URLSpan span) {
         if (url == null) {
             ((View) getParent()).callOnClick();

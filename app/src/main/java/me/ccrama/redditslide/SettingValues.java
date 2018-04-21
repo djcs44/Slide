@@ -120,6 +120,7 @@ public class SettingValues {
     public static final String PREF_LONG_LINK              = "shareLongLink";
 
     public static final String PREF_TAP_VOTE               = "tapVote";
+    public static final String PREF_TAP_VOTE_COMMENTS      = "tapVoteComment";
 
     public static CreateCardView.CardEnum defaultCardView;
     public static Sorting                 defaultSorting;
@@ -239,7 +240,9 @@ public class SettingValues {
     public static boolean largeLinks;
     public static boolean highlightCommentOP;
     public static boolean highlightTime;
+
     public static boolean tapVote;
+    public static boolean tapVoteComment;
 
     public static void setAllValues(SharedPreferences settings) {
         prefs = settings;
@@ -390,6 +393,8 @@ public class SettingValues {
 
         // defaulting to false as of now - dj 20180421
         tapVote = prefs.getBoolean(PREF_TAP_VOTE, false);
+        tapVoteComment = prefs.getBoolean(PREF_TAP_VOTE_COMMENTS, false);
+        tapVoteComment = true; // locked true until proper layout has been added
     }
 
     public static void setPicsEnabled(String sub, boolean checked) {

@@ -27,7 +27,9 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -35,6 +37,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.devspark.robototextview.RobotoTypefaces;
@@ -65,6 +68,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+
+import javax.annotation.Nullable;
 
 import me.ccrama.redditslide.ActionStates;
 import me.ccrama.redditslide.Activities.BaseActivity;
@@ -379,6 +384,71 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     }
                 }
             });
+            if(SettingValues.tapVoteComment) {
+                final ImageView upvoteButton = holder.itemView.findViewById(R.id.upvote);
+                final ImageView downvoteButton = holder.itemView.findViewById(R.id.downvote);
+                holder.firstTextView.setOnTouchListener(new View.OnTouchListener() {
+                    //Create handler for delaying actions until after next tap timeout
+                    Handler mHandler = new Handler();
+                    int mNumTaps = 0;
+                    long mLastTapTimeMs = 0, mTouchDownMs = 0, mTimeAtPress;
+
+                    @Override
+                    public boolean onTouch(final View v, MotionEvent event) {
+                        // Cache time so there's no variation between currentTimeMillis() calls
+                        mTimeAtPress = System.currentTimeMillis();
+                        switch (event.getAction()) {
+                            case MotionEvent.ACTION_DOWN:
+                                mTouchDownMs = mTimeAtPress;
+                                break;
+                            case MotionEvent.ACTION_UP:
+                                mHandler.removeCallbacksAndMessages(null);
+                                if ((mTimeAtPress - mTouchDownMs) > ViewConfiguration.getTapTimeout()) {
+                                    mNumTaps = 0;
+                                    mLastTapTimeMs = 0;
+                                    break;
+                                }
+                                if (mNumTaps > 0 && (mTimeAtPress - mLastTapTimeMs) < ViewConfiguration.getDoubleTapTimeout())
+                                    mNumTaps++;
+                                else mNumTaps = 1;
+                                mLastTapTimeMs = mTimeAtPress;
+                                if (mNumTaps == 3) {
+                                    Toast.makeText(holder.itemView.getContext(), "triple tap!", Toast.LENGTH_SHORT).show();
+                                    // Valid triple tap
+                                    performCommentDownvote(holder, comment, baseNode, comment, v, upvoteButton, downvoteButton);
+//                                    downvoteButton.performClick();
+                                }
+                                else if (mNumTaps == 2) {
+                                    // Wait in case of a third tap
+                                    mHandler.postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (mNumTaps == 2) {
+                                                performCommentUpvote(holder, comment, baseNode, comment, v, upvoteButton, downvoteButton);
+                                                Toast.makeText(holder.itemView.getContext(), "double tap!", Toast.LENGTH_SHORT).show();
+                                                // No further taps, it's a double tap
+//                                                upvoteButton.performClick();
+                                            }
+                                        }
+                                    }, ViewConfiguration.getDoubleTapTimeout());
+                                }
+                                else {
+                                    // Wait in case of a second tap
+                                    mHandler.postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (mNumTaps == 1) {
+                                                // Single tap, allow default click action
+                                                v.performClick();
+                                            }
+                                        }
+                                    }, ViewConfiguration.getDoubleTapTimeout());
+                                }
+                        }
+                        return true;
+                    }
+                });
+            }
             if (ImageFlairs.isSynced(comment.getSubredditName())
                     && comment.getAuthorFlair() != null
                     && comment.getAuthorFlair().getCssClass() != null
@@ -1514,39 +1584,14 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
                 @Override
                 public void onSingleClick(View v) {
-                    setCommentStateUnhighlighted(holder, comment, baseNode, true);
-                    if (ActionStates.getVoteDirection(comment) == VoteDirection.UPVOTE) {
-                        new Vote(v, mContext).execute(n);
-                        ActionStates.setVoteDirection(comment, VoteDirection.NO_VOTE);
-                        doScoreText(holder, n, CommentAdapter.this);
-                        upvote.clearColorFilter();
-                    } else {
-                        new Vote(true, v, mContext).execute(n);
-                        ActionStates.setVoteDirection(comment, VoteDirection.UPVOTE);
-                        downvote.clearColorFilter(); // reset colour
-                        doScoreText(holder, n, CommentAdapter.this);
-                        upvote.setColorFilter(holder.textColorUp, PorterDuff.Mode.MULTIPLY);
-                    }
+                    performCommentUpvote(holder, n, baseNode, comment, v, upvote, downvote);
                 }
             });
             downvote.setOnClickListener(new OnSingleClickListener() {
 
                 @Override
                 public void onSingleClick(View v) {
-                    setCommentStateUnhighlighted(holder, comment, baseNode, true);
-                    if (ActionStates.getVoteDirection(comment) == VoteDirection.DOWNVOTE) {
-                        new Vote(v, mContext).execute(n);
-                        ActionStates.setVoteDirection(comment, VoteDirection.NO_VOTE);
-                        doScoreText(holder, n, CommentAdapter.this);
-                        downvote.clearColorFilter();
-
-                    } else {
-                        new Vote(false, v, mContext).execute(n);
-                        ActionStates.setVoteDirection(comment, VoteDirection.DOWNVOTE);
-                        upvote.clearColorFilter(); // reset colour
-                        doScoreText(holder, n, CommentAdapter.this);
-                        downvote.setColorFilter(holder.textColorDown, PorterDuff.Mode.MULTIPLY);
-                    }
+                    performCommentDownvote(holder, n, baseNode, comment, v, upvote, downvote);
                 }
             });
             menu.setBackgroundColor(color);
@@ -1560,6 +1605,47 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             holder.itemView.findViewById(R.id.background)
                     .setBackgroundColor(Color.argb(50, Color.red(color), Color.green(color),
                             Color.blue(color)));
+        }
+    }
+    private void performCommentUpvote(final CommentViewHolder holder, final Comment n,
+            final CommentNode baseNode, final Comment comment, final View v, @Nullable final ImageView upvote,
+            @Nullable final ImageView downvote) {
+        setCommentStateUnhighlighted(holder, comment, baseNode, true);
+        if (ActionStates.getVoteDirection(comment) == VoteDirection.UPVOTE) {
+            new Vote(v, mContext).execute(n);
+            ActionStates.setVoteDirection(comment, VoteDirection.NO_VOTE);
+            doScoreText(holder, n, CommentAdapter.this);
+            if (upvote != null)
+                upvote.clearColorFilter();
+        } else {
+            new Vote(true, v, mContext).execute(n);
+            ActionStates.setVoteDirection(comment, VoteDirection.UPVOTE);
+            if (downvote != null)
+                downvote.clearColorFilter(); // reset colour
+            doScoreText(holder, n, CommentAdapter.this);
+            if (upvote != null)
+                upvote.setColorFilter(holder.textColorUp, PorterDuff.Mode.MULTIPLY);
+        }
+    }
+    private void performCommentDownvote(final CommentViewHolder holder, final Comment n,
+            final CommentNode baseNode, final Comment comment, final View v, @Nullable final ImageView upvote,
+            @Nullable final ImageView downvote) {
+        setCommentStateUnhighlighted(holder, comment, baseNode, true);
+        if (ActionStates.getVoteDirection(comment) == VoteDirection.DOWNVOTE) {
+            new Vote(v, mContext).execute(n);
+            ActionStates.setVoteDirection(comment, VoteDirection.NO_VOTE);
+            doScoreText(holder, n, CommentAdapter.this);
+            if (downvote != null)
+                downvote.clearColorFilter();
+
+        } else {
+            new Vote(false, v, mContext).execute(n);
+            ActionStates.setVoteDirection(comment, VoteDirection.DOWNVOTE);
+            if (upvote != null)
+                upvote.clearColorFilter(); // reset colour
+            doScoreText(holder, n, CommentAdapter.this);
+            if (downvote != null)
+                downvote.setColorFilter(holder.textColorDown, PorterDuff.Mode.MULTIPLY);
         }
     }
 
