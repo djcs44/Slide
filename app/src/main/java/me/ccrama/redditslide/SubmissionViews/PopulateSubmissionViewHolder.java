@@ -16,6 +16,7 @@ import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -27,11 +28,15 @@ import android.text.Html;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.text.style.AbsoluteSizeSpan;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -128,10 +133,65 @@ public class PopulateSubmissionViewHolder {
 
     private static void addClickFunctions(final View base, final ContentType.Type type,
             final Activity contextActivity, final Submission submission,
-            final SubmissionViewHolder holder, final boolean full) {
+            final SubmissionViewHolder holder, final boolean full, final View tapBase, final ImageView upvoteButton, final ImageView downvoteButton) {
+
+        tapBase.setOnTouchListener(new View.OnTouchListener() {
+            Handler mHandler = new Handler();
+            int mNumTaps = 0;
+            long mLastTapTimeMs = 0, mTouchDownMs = 0, mTimeAtPress;
+
+            @Override
+            public boolean onTouch(final View v, MotionEvent event) {
+                // Cache time so there's no variation between currentTimeMillis() calls
+                mTimeAtPress = System.currentTimeMillis();
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        mTouchDownMs = mTimeAtPress;
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        mHandler.removeCallbacksAndMessages(null);
+                        if((mTimeAtPress - mTouchDownMs) >ViewConfiguration.getTapTimeout()) {
+                            mNumTaps = 0;
+                            mLastTapTimeMs = 0;
+                            break;
+                        }
+                        if(mNumTaps > 0 && (mTimeAtPress - mLastTapTimeMs) < ViewConfiguration.getDoubleTapTimeout())
+                            mNumTaps ++;
+                        else
+                            mNumTaps = 1;
+                        mLastTapTimeMs = mTimeAtPress;
+                        if(mNumTaps == 3) {
+                            Toast.makeText(v.getContext(), "triple tap!", Toast.LENGTH_SHORT).show();
+                            downvoteButton.performClick();
+                        }
+                        else if(mNumTaps == 2) {
+                            mHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (mNumTaps == 2) {
+                                        upvoteButton.performClick();
+                                        Toast.makeText(v.getContext(), "double tap!", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            }, ViewConfiguration.getDoubleTapTimeout());
+                        }
+                        else
+                            mHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+//                                    if(mNumTaps == 1)
+//                                        v.performClick();
+                                }
+                            }, ViewConfiguration.getTapTimeout());
+                }
+                return true;
+            }
+        });
         base.setOnClickListener(new OnSingleClickListener() {
             @Override
             public void onSingleClick(View v) {
+                if(System.currentTimeMillis() > 0)
+                    return;
                 if (NetworkUtil.isConnected(contextActivity) || (!NetworkUtil.isConnected(
                         contextActivity) && ContentType.fullImage(type))) {
                     if (SettingValues.storeHistory && !full) {
@@ -2740,15 +2800,15 @@ public class PopulateSubmissionViewHolder {
 
         final ContentType.Type type = ContentType.getContentType(submission);
 
-        addClickFunctions(holder.leadImage, type, mContext, submission, holder, full);
+        addClickFunctions(holder.leadImage, type, mContext, submission, holder, full, holder.itemView, upvotebutton, downvotebutton);
 
         if (thumbImage2 != null) {
-            addClickFunctions(thumbImage2, type, mContext, submission, holder, full);
+            addClickFunctions(thumbImage2, type, mContext, submission, holder, full, holder.itemView, upvotebutton, downvotebutton);
         }
 
         if (full) {
             addClickFunctions(holder.itemView.findViewById(R.id.wraparea), type, mContext,
-                    submission, holder, full);
+                    submission, holder, full, holder.itemView, upvotebutton, downvotebutton);
         }
 
         if (full) {
