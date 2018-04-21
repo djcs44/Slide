@@ -137,6 +137,7 @@ public class PopulateSubmissionViewHolder {
 
         if(SettingValues.tapVote) {
             tapBase.setOnTouchListener(new View.OnTouchListener() {
+                //Create handler for delaying actions until after next tap timeout
                 Handler mHandler = new Handler();
                 int mNumTaps = 0;
                 long mLastTapTimeMs = 0, mTouchDownMs = 0, mTimeAtPress;
@@ -160,25 +161,33 @@ public class PopulateSubmissionViewHolder {
                                 mNumTaps++;
                             else mNumTaps = 1;
                             mLastTapTimeMs = mTimeAtPress;
-                            if (mNumTaps == 3) {
+                            if (mNumTaps == 3)
+                                // Valid triple tap
                                 downvoteButton.performClick();
-                            } else if (mNumTaps == 2) {
+                            else if (mNumTaps == 2) {
+                                // Wait in case of a third tap
                                 mHandler.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
                                         if (mNumTaps == 2) {
+                                            // No further taps, it's a double tap
                                             upvoteButton.performClick();
                                         }
                                     }
                                 }, ViewConfiguration.getDoubleTapTimeout());
-                            } else mHandler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (mNumTaps == 1) {
-                                        v.performClick();
+                            }
+                            else {
+                                // Wait in case of a second tap
+                                mHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (mNumTaps == 1) {
+                                            // Single tap, allow default click action
+                                            v.performClick();
+                                        }
                                     }
-                                }
-                            }, ViewConfiguration.getDoubleTapTimeout());
+                                }, ViewConfiguration.getDoubleTapTimeout());
+                            }
                     }
                     return true;
                 }
