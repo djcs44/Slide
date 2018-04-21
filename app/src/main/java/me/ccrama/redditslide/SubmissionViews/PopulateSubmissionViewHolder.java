@@ -150,7 +150,7 @@ public class PopulateSubmissionViewHolder {
                         break;
                     case MotionEvent.ACTION_UP:
                         mHandler.removeCallbacksAndMessages(null);
-                        if((mTimeAtPress - mTouchDownMs) >ViewConfiguration.getTapTimeout()) {
+                        if((mTimeAtPress - mTouchDownMs) > ViewConfiguration.getTapTimeout()) {
                             mNumTaps = 0;
                             mLastTapTimeMs = 0;
                             break;
@@ -161,7 +161,6 @@ public class PopulateSubmissionViewHolder {
                             mNumTaps = 1;
                         mLastTapTimeMs = mTimeAtPress;
                         if(mNumTaps == 3) {
-                            Toast.makeText(v.getContext(), "triple tap!", Toast.LENGTH_SHORT).show();
                             downvoteButton.performClick();
                         }
                         else if(mNumTaps == 2) {
@@ -170,7 +169,6 @@ public class PopulateSubmissionViewHolder {
                                 public void run() {
                                     if (mNumTaps == 2) {
                                         upvoteButton.performClick();
-                                        Toast.makeText(v.getContext(), "double tap!", Toast.LENGTH_SHORT).show();
                                     }
                                 }
                             }, ViewConfiguration.getDoubleTapTimeout());
@@ -179,10 +177,11 @@ public class PopulateSubmissionViewHolder {
                             mHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-//                                    if(mNumTaps == 1)
-//                                        v.performClick();
+                                    if(mNumTaps == 1) {
+                                        v.performClick();
+                                    }
                                 }
-                            }, ViewConfiguration.getTapTimeout());
+                            }, ViewConfiguration.getDoubleTapTimeout());
                 }
                 return true;
             }
@@ -190,8 +189,6 @@ public class PopulateSubmissionViewHolder {
         base.setOnClickListener(new OnSingleClickListener() {
             @Override
             public void onSingleClick(View v) {
-                if(System.currentTimeMillis() > 0)
-                    return;
                 if (NetworkUtil.isConnected(contextActivity) || (!NetworkUtil.isConnected(
                         contextActivity) && ContentType.fullImage(type))) {
                     if (SettingValues.storeHistory && !full) {
