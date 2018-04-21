@@ -394,7 +394,6 @@ public class SettingValues {
         // defaulting to false as of now - dj 20180421
         tapVote = prefs.getBoolean(PREF_TAP_VOTE, false);
         tapVoteComment = prefs.getBoolean(PREF_TAP_VOTE_COMMENTS, false);
-        tapVoteComment = true; // locked true until proper layout has been added
     }
 
     public static void setPicsEnabled(String sub, boolean checked) {

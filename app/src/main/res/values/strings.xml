@@ -596,6 +596,7 @@
     <string name="settings_general_immersive_mode_desc">Hide the status and navigation bars (experimental)</string>
     <string name="settings_general_tap_vote">Double/Triple tap to upvote/downvote</string>
     <string name="settings_general_tap_vote_desc">Will add a slight delay to opening a post</string>
+    <string name="settings_comments_tap_vote_desc">Will add a slight delay to tapping a post</string>
 
 
     <!-- Settings titles displayed in settings activity-->

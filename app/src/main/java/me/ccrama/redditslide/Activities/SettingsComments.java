@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v7.widget.SwitchCompat;
 import android.widget.CompoundButton;
 
+import me.ccrama.redditslide.Authentication;
 import me.ccrama.redditslide.R;
 import me.ccrama.redditslide.SettingValues;
 
@@ -194,6 +195,24 @@ public class SettingsComments extends BaseActivityAnim {
                     SettingValues.prefs.edit().putBoolean(SettingValues.PREF_CROP_IMAGE, isChecked).apply();
                 }
             });
+        }
+
+        final SwitchCompat switchTapVoteComment = (SwitchCompat) findViewById(R.id.tapVoteComments);
+        switchTapVoteComment.setEnabled(Authentication.isLoggedIn);
+        if(Authentication.isLoggedIn) {
+            switchTapVoteComment.setChecked(SettingValues.tapVoteComment);
+            switchTapVoteComment.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    SettingValues.tapVoteComment = isChecked;
+                    SettingValues.prefs.edit().putBoolean(SettingValues.PREF_TAP_VOTE_COMMENTS, isChecked).apply();
+                }
+            });
+        }
+        else {
+            switchTapVoteComment.setChecked(false);
+            SettingValues.tapVote = false;
+            SettingValues.prefs.edit().putBoolean(SettingValues.PREF_TAP_VOTE_COMMENTS, false).apply();
         }
     }
 }
