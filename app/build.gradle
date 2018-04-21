@@ -20,6 +20,7 @@ android {
         compileSdkVersion 27
         multiDexEnabled = true
         versionName androidGitVersion.name()
+        vectorDrawables.useSupportLibrary = true
     }
 
     flavorDimensions "variant"
