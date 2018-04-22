@@ -393,12 +393,24 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     Handler mHandler = new Handler();
                     int mNumTaps = 0;
                     long mLastTapTimeMs = 0, mTouchDownMs = 0, mTimeAtPress;
+                    float position = 0;
 
                     @Override
                     public boolean onTouch(final View v, MotionEvent event) {
                         boolean mHasCallback = false;
                         // Cache time so there's no variation between currentTimeMillis() calls
                         mTimeAtPress = System.currentTimeMillis();
+
+
+                        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                            position = event.getY(); //used to see if the user scrolled or not
+                        }
+                        if (!(event.getAction() == MotionEvent.ACTION_UP
+                                || event.getAction() == MotionEvent.ACTION_DOWN)) {
+                            if (Math.abs((position - event.getY())) > 25) {
+                                mHandler.removeCallbacksAndMessages(null);
+                            }
+                        }
                         switch (event.getAction()) {
 //                            case MotionEvent.ACTION_MOVE:
 //                                mHandler.removeCallbacksAndMessages(null);
