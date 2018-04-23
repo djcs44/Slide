@@ -23,7 +23,10 @@ import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
+import android.text.Layout;
+import android.text.SpannableString;
 import android.text.TextWatcher;
+import android.text.style.URLSpan;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -61,6 +64,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -384,16 +388,18 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     }
                 }
             });
-            if(SettingValues.tapVoteComment) {
+            if(Authentication.isLoggedIn && SettingValues.tapVoteComment) {
                 // Tapping on in-text content doesn't work
                 final ImageView upvoteButton = holder.itemView.findViewById(R.id.upvote);
                 final ImageView downvoteButton = holder.itemView.findViewById(R.id.downvote);
+
                 holder.firstTextView.setOnTouchListener(new View.OnTouchListener() {
                     //Create handler for delaying actions until after next tap timeout
                     Handler mHandler = new Handler();
                     int mNumTaps = 0;
                     long mLastTapTimeMs = 0, mTouchDownMs = 0, mTimeAtPress;
                     float position = 0;
+                    boolean mHandledClick = false;
 
                     @Override
                     public boolean onTouch(final View v, MotionEvent event) {
@@ -412,23 +418,27 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                             }
                         }
                         switch (event.getAction()) {
-//                            case MotionEvent.ACTION_MOVE:
-//                                mHandler.removeCallbacksAndMessages(null);
-//                                break;
                             case MotionEvent.ACTION_DOWN:
                                 mTouchDownMs = mTimeAtPress;
                                 mHasCallback = true;
                                 mHandler.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
-                                        if(mNumTaps == 0)
+                                        if(mNumTaps == 0) {
                                             v.performLongClick();
+                                            mHandledClick = true;
+                                        }
                                     }
                                 }, ViewConfiguration.getLongPressTimeout());
                                 break;
                             case MotionEvent.ACTION_UP:
+                                if(mHandledClick) {
+                                    mHandledClick = false;
+                                    return true;
+                                }
                                 mHasCallback = false;
                                 mHandler.removeCallbacksAndMessages(null);
+                                Log.d("CommentAdapter", "onTouch: mTimeSincePress:" + (mTimeAtPress - mTouchDownMs));
                                 if ((mTimeAtPress - mTouchDownMs) > ViewConfiguration.getTapTimeout()) {
                                     mNumTaps = 0;
                                     mLastTapTimeMs = 0;
@@ -454,7 +464,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                         }
                                     }, ViewConfiguration.getDoubleTapTimeout());
                                 }
-                                else {
+                                else if (mNumTaps == 1) {
                                     mHasCallback = true;
                                     // Wait in case of a second tap
                                     mHandler.postDelayed(new Runnable() {
