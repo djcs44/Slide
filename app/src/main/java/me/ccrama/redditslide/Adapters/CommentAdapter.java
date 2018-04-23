@@ -389,10 +389,6 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 }
             });
             if(Authentication.isLoggedIn && SettingValues.tapVoteComment) {
-                // Tapping on in-text content doesn't work
-                final ImageView upvoteButton = holder.itemView.findViewById(R.id.upvote);
-                final ImageView downvoteButton = holder.itemView.findViewById(R.id.downvote);
-
                 holder.firstTextView.setOnTouchListener(new View.OnTouchListener() {
                     //Create handler for delaying actions until after next tap timeout
                     Handler mHandler = new Handler();
@@ -407,12 +403,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         // Cache time so there's no variation between currentTimeMillis() calls
                         mTimeAtPress = System.currentTimeMillis();
 
-
-                        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                            position = event.getY(); //used to see if the user scrolled or not
-                        }
-                        if (!(event.getAction() == MotionEvent.ACTION_UP
-                                || event.getAction() == MotionEvent.ACTION_DOWN)) {
+                        if (!(event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_DOWN)) {
                             if (Math.abs((position - event.getY())) > 25) {
                                 mHandler.removeCallbacksAndMessages(null);
                             }
@@ -420,6 +411,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         switch (event.getAction()) {
                             case MotionEvent.ACTION_DOWN:
                                 mTouchDownMs = mTimeAtPress;
+                                position = event.getY();
                                 mHasCallback = true;
                                 mHandler.postDelayed(new Runnable() {
                                     @Override
@@ -438,7 +430,6 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                 }
                                 mHasCallback = false;
                                 mHandler.removeCallbacksAndMessages(null);
-                                Log.d("CommentAdapter", "onTouch: mTimeSincePress:" + (mTimeAtPress - mTouchDownMs));
                                 if ((mTimeAtPress - mTouchDownMs) > ViewConfiguration.getTapTimeout()) {
                                     mNumTaps = 0;
                                     mLastTapTimeMs = 0;
@@ -450,7 +441,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                 mLastTapTimeMs = mTimeAtPress;
                                 if (mNumTaps == 3) {
                                     // Valid triple tap
-                                    performCommentDownvote(holder, comment, baseNode, comment, v, upvoteButton, downvoteButton);
+                                    performCommentDownvote(holder, comment, baseNode, comment, v, null, null);
                                 }
                                 else if (mNumTaps == 2) {
                                     mHasCallback = true;
@@ -459,7 +450,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                         @Override
                                         public void run() {
                                             if (mNumTaps == 2) {
-                                                performCommentUpvote(holder, comment, baseNode, comment, v, upvoteButton, downvoteButton);
+                                                performCommentUpvote(holder, comment, baseNode, comment, v, null, null);
                                             }
                                         }
                                     }, ViewConfiguration.getDoubleTapTimeout());
