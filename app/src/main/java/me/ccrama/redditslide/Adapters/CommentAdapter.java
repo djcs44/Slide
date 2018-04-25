@@ -398,7 +398,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     boolean mHandledClick = false;
 
                     @Override
-                    public boolean onTouch(final View v, MotionEvent event) {
+                    public boolean onTouch(final View v, final MotionEvent event) {
                         boolean mHasCallback = false;
                         // Cache time so there's no variation between currentTimeMillis() calls
                         mTimeAtPress = System.currentTimeMillis();
@@ -464,6 +464,9 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                             if (mNumTaps == 1) {
                                                 // Single tap, allow default click action
                                                 v.performClick();
+                                                v.onTouchEvent(event);
+//                                                if(!v.onTouchEvent(event))
+//                                                    v.performClick();
                                             }
                                         }
                                     }, ViewConfiguration.getDoubleTapTimeout());
